@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- disabled state -->
+    <item android:state_enabled="false" android:drawable="@drawable/alpha_btn_bg" />
+    <item android:state_enabled="true" android:drawable="@drawable/button_bg"  />
+    <item android:drawable="@drawable/button_bg"/>
+</selector>

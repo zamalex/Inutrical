@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#061C43</color>
+    <color name="colorPrimaryDark">#061C43</color>
+    <color name="colorAccent">#03DAC5</color>
+    <color name="mgreen">#A9D41F</color>
+    <color name="mback">#FAFBFE</color>
+    <color name="mwhite">#FFFFFF</color>
+    <color name="mdarkgrey">#8391A2</color>
+    <color name="fontgrey">#6C757D</color>
+    <color name="mblue">#061C43</color>
+    <color name="cardgrey">#F1F3FA</color>
+</resources>
