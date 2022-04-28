@@ -6,6 +6,7 @@ import android.content.SharedPreferences
 
 object LocalData{
 
+        var token:String=""
 
         fun saveUser(name:String?,pass:String?,mail:String?,context: Context){
             val pref: SharedPreferences =

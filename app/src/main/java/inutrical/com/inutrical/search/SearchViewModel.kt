@@ -23,13 +23,15 @@ class SearchViewModel : ViewModel() {
     var result = MutableLiveData<SearchModel>()
     var history = MutableLiveData<HistoryModel>()
     var pdfresponse = MutableLiveData<Boolean>()
+    var htmlReponse = MutableLiveData<ResponseBody>()
 
 
     fun search(jsonObject: JsonObject) {
         inutrical.com.inutrical.api.Retrofit.Api.search(jsonObject)
             .enqueue(object : Callback<SearchModel> {
                 override fun onFailure(call: Call<SearchModel>, t: Throwable) {
-                    result.value = SearchModel().apply { errorCode = 555 }
+                    Log.e("error",t.localizedMessage);
+                    result.value = SearchModel().apply { statusCode = 555 }
                 }
 
                 override fun onResponse(call: Call<SearchModel>, response: Response<SearchModel>) {
@@ -99,7 +101,7 @@ class SearchViewModel : ViewModel() {
         inutrical.com.inutrical.api.Retrofit.Api.exportPdf(requestObj)
             .enqueue(object : Callback<ResponseBody> {
                 override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                    pdfresponse.value = false
+                    htmlReponse.value = null
                 }
 
                 override fun onResponse(
@@ -107,9 +109,10 @@ class SearchViewModel : ViewModel() {
                     response: Response<ResponseBody>
                 ) {
                     if (response.isSuccessful)
-                        pdfresponse.value = writeResponseBodyToDisk(response.body()!!)
+                       // pdfresponse.value = writeResponseBodyToDisk(response.body()!!)
+                        htmlReponse.value = response.body()
                     else
-                        pdfresponse.value = false
+                        htmlReponse.value = null
                 }
             })
     }

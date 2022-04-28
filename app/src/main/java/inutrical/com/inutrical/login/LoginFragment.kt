@@ -71,8 +71,8 @@ class LoginFragment : Fragment() {
                 // callApi
                 val body: JsonObject = JsonObject()
 
-                body.addProperty("UserName", mail.text.toString())
-                body.addProperty("Password", pass.text.toString())
+                body.addProperty("username", mail.text.toString())
+                body.addProperty("password", pass.text.toString())
                 /* val action = LoginFragmentDirections.actionLoginFragmentToMainFragment("Welcome")
 
                  mview.findNavController().navigate(action)*/
@@ -90,13 +90,13 @@ class LoginFragment : Fragment() {
                 (activity as MainActivity).showProgress(false)
 
                 if (t != null) {
-                    when (t!!.errorCode) {
-                        0 -> {
+                    when (t!!.status_code) {
+                        200 -> {
                             Toast.makeText(requireActivity(), "Success", Toast.LENGTH_LONG).show()
                             LocalData.saveUser(
                                 mail.text.toString(),
-                                pass.text.toString(),
-                                t.data.mail,
+                                t.data?.get(0)?.token,
+                                t.data?.get(0)?.name,
                                 requireActivity()
                             )
                             val action =
@@ -115,7 +115,7 @@ class LoginFragment : Fragment() {
                             .show()
                         4 -> Toast.makeText(requireActivity(), "Invalid Input", Toast.LENGTH_LONG)
                             .show()
-                        5 -> Toast.makeText(requireActivity(), "Unauthorized", Toast.LENGTH_LONG)
+                        401 -> Toast.makeText(requireActivity(), "Unauthorized", Toast.LENGTH_LONG)
                             .show()
                         555 -> Toast.makeText(
                             requireActivity(),

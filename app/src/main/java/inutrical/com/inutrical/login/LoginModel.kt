@@ -1,20 +1,14 @@
 package inutrical.com.inutrical.login
 
-
-import com.google.gson.annotations.SerializedName
-
 data class LoginModel(
-    @SerializedName("Data")
-    var `data`: Data = Data(),
-    @SerializedName("ErrorCode")
-    var errorCode: Int = 0
-) {
-    data class Data(
-        @SerializedName("FullName")
-        var fullName: String = "",
-        @SerializedName("Mail")
-        var mail:  String = "",
-        @SerializedName("UserId")
-        var userId: String = ""
-    )
-}
+	var status_code: Int? = null,
+	val data: List<DataItem?>? = null,
+	val message: String? = null
+)
+
+data class DataItem(
+	val name: String? = null,
+	val id: Int? = null,
+	val token: String? = null
+)
+

@@ -4,29 +4,29 @@ package inutrical.com.inutrical.calculate
 import com.google.gson.annotations.SerializedName
 
 data class CalculateResultModel(
-    @SerializedName("Data")
+    @SerializedName("data")
     var `data`: Data = Data(),
-    @SerializedName("ErrorCode")
-    var errorCode: Int = 100
+    @SerializedName("status_code")
+    var errorCode: Int = 0
 ) {
     data class Data(
         @SerializedName("Carb")
-        var carb: Double = 0.0,
-        @SerializedName("FAT")
-        var fAT: Double = 0.0,
+        var carb:String = "0.0",
+        @SerializedName("Fat")
+        var fAT:String = "0.0",
         @SerializedName("K")
-        var k: Double = 0.0,
-        @SerializedName("NA")
-        var nA: Double = 0.0,
-        @SerializedName("NumberOFCans")
-        var numberOFCans: Double = 0.0,
-        @SerializedName("Protein")
-        var protein: Double = 0.0,
+        var k:String = "0.0",
+        @SerializedName("Na")
+        var nA:String = "0.0",
+        @SerializedName("NumberOfCans")
+        var numberOFCans:String = "0.0",
+        @SerializedName("Protien")
+        var protein:String = "0.0",
         @SerializedName("TotalCalories")
-        var totalCalories: Double = 0.0,
+        var totalCalories:String = "0.0",
         @SerializedName("TotalVolume")
-        var totalVolume: Double = 0.0,
-        @SerializedName("Water")
-        var water: Double = 0.0
+        var totalVolume:String = "0.0",
+        @SerializedName("water")
+        var water: String = "0.0"
     )
 }

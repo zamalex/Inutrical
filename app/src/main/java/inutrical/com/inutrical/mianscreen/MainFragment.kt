@@ -34,6 +34,8 @@ class MainFragment : Fragment() ,onMainClick{
         // Inflate the layout for this fragment
         mview = inflater.inflate(R.layout.fragment_main, container, false)
 
+        LocalData.token = LocalData.getUser(requireContext()).pass.toString()
+
         mAdapter =
             MainAdapter(requireActivity(), this)
 

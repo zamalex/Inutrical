@@ -1,5 +1,6 @@
 package inutrical.com.inutrical.resetpassword
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -16,6 +17,7 @@ import com.mobsandgeeks.saripaar.annotation.Password
 
 import inutrical.com.inutrical.R
 import inutrical.com.inutrical.main.MainActivity
+import inutrical.com.inutrical.main.SplashActivity
 import kotlinx.android.synthetic.main.fragment_reset_password.view.*
 import javax.xml.validation.Validator
 import kotlin.math.min
@@ -66,12 +68,20 @@ class ResetPasswordFragment : Fragment() {
             }
 
             override fun onValidationSucceeded() {
+
+                if (!pass_e.text.toString().equals(repass_e.text.toString())){
+                    Toast.makeText(activity,"password doesn't match",Toast.LENGTH_SHORT).show()
+                    return
+                }
                 // callApi
                 val body: JsonObject = JsonObject()
 
-                body.addProperty("Mail", args.mail)
-                body.addProperty("Code", args.code)
-                body.addProperty("Password", pass_e.text.toString())
+
+
+                body.addProperty("email", args.mail)
+                body.addProperty("code", args.code)
+                body.addProperty("confirm_password", pass_e.text.toString())
+                body.addProperty("password", pass_e.text.toString())
 
                 (activity as MainActivity).showProgress(true)
 
@@ -86,8 +96,23 @@ class ResetPasswordFragment : Fragment() {
         viewModel.result.observe(requireActivity(), Observer {
             (activity as MainActivity).showProgress(false)
 
-            if (it!!.errorCode == 555)
-                Toast.makeText(requireActivity(), "request timeout", Toast.LENGTH_LONG).show()
+            if (it!=null){
+                if (it.errorCode == 555)
+                    Toast.makeText(requireActivity(), "request timeout", Toast.LENGTH_LONG).show()
+                else if (it.errorCode==200){
+                    Toast.makeText(requireActivity(), "password updated successfully", Toast.LENGTH_LONG).show()
+                    startActivity(Intent(requireActivity(),SplashActivity::class.java))
+                }
+                else{
+                    Toast.makeText(requireActivity(), "server error", Toast.LENGTH_LONG).show()
+                }
+
+            }
+            else{
+                Toast.makeText(requireActivity(), "server error", Toast.LENGTH_LONG).show()
+
+            }
+
 
         })
 

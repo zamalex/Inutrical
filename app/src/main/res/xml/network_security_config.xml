@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
     <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">www.inutrical.com</domain>
+        <domain includeSubdomains="true">inutrical.badee.com</domain>
     </domain-config>
 </network-security-config>

@@ -2,17 +2,16 @@ package inutrical.com.inutrical.api
 
 import com.google.gson.JsonObject
 import inutrical.com.inutrical.RequestDietPlan
-import inutrical.com.inutrical.calculate.BmiModel
-import inutrical.com.inutrical.calculate.CalculateResultModel
-import inutrical.com.inutrical.calculate.Lookup
+import inutrical.com.inutrical.calculate.*
 import inutrical.com.inutrical.forgotpassword.CodeModel
 import inutrical.com.inutrical.login.LoginModel
 import inutrical.com.inutrical.search.HistoryModel
 import inutrical.com.inutrical.search.SearchModel
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import retrofit2.Call
-import retrofit2.http.Body
-import retrofit2.http.POST
+import retrofit2.http.*
 
 interface ApiService {
 
@@ -23,11 +22,22 @@ interface ApiService {
     @POST("app/PatientsData/CalculateBMI")
     fun calculateBmi(@Body body:JsonObject): Call<BmiModel>
 
-    @POST("app/Formulas/GetLookups")
-    fun getCats(@Body body:JsonObject): Call<Lookup>
+    @GET("app/Formulas/Lookups")
+    fun getCats(): Call<Lookup>
 
-    @POST("app/Profile/GenerateCode")
+    @GET("app/Diseases")
+    fun getDiseases(): Call<DiseasesModel>
+
+    @POST("app/Profile/ForgetPassword")
     fun getCode(@Body body:JsonObject): Call<CodeModel>
+
+    @POST("app/PatientsData/update")
+    fun updatePatient(@Body body:JsonObject): Call<ResponseBody>
+
+    @Multipart
+    @POST("app/PatientsData/CalculateDietplan")
+    fun createDietPlan(@Part labresults: MultipartBody.Part?,@Part medicalhistory: MultipartBody.Part?, @PartMap() partMap: Map<String, @JvmSuppressWildcards RequestBody>
+    ): Call<ApplyResponse>
 
     @POST("app/Profile/ValidateCode")
     fun verifyCode(@Body body:JsonObject): Call<CodeModel>

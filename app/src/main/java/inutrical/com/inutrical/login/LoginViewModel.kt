@@ -16,7 +16,7 @@ class LoginViewModel : ViewModel() {
     fun login(data: JsonObject) {
         Retrofit.Api.login(data).enqueue(object : Callback<LoginModel> {
             override fun onFailure(call: Call<LoginModel>, t: Throwable) {
-                result.value=LoginModel().apply { errorCode=555 }
+                result.value=LoginModel().apply { status_code=555 }
             }
 
             override fun onResponse(call: Call<LoginModel>, response: Response<LoginModel>) {

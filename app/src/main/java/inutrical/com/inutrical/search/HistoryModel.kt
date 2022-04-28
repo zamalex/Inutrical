@@ -4,26 +4,27 @@ package inutrical.com.inutrical.search
 import com.google.gson.annotations.SerializedName
 
 data class HistoryModel(
-    @SerializedName("Data")
+    @SerializedName("data")
     var `data`: List<Data> = listOf(),
-    @SerializedName("ErrorCode")
+    @SerializedName("status_code")
     var errorCode: Int = 0
 ) {
     data class Data(
-        var Id: Int = 0,
+        var id: Int = 0,
 
+        @SerializedName("followup_date")
         var followUpDate: String = "",
-        @SerializedName("LabResults")
-        var labResults: LabResults = LabResults(),
-        @SerializedName("MedicalHistory")
-        var medicalHistory: MedicalHistory = MedicalHistory(),
-        @SerializedName("PatientName")
+        @SerializedName("labresults")
+        var labResults: String = "",
+        @SerializedName("medicalhistory")
+        var medicalHistory: String = "",
+        @SerializedName("patient_name")
         var patientName: String = "",
-        @SerializedName("PatientNumber")
+        @SerializedName("patient_number")
         var patientNumber: String = "",
-        @SerializedName("PhysicianName")
+        @SerializedName("physican_name")
         var physicianName: String = "",
-        @SerializedName("Doctor")
+        @SerializedName("doctor_name")
         var clinicalDietation: String? = ""
     ) {
         data class LabResults(

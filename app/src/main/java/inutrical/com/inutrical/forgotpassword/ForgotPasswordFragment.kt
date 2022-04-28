@@ -56,6 +56,7 @@ class ForgotPasswordFragment : Fragment() {
 
 
         dialog = Dialog(requireActivity())
+        dialog.setCancelable(false)
         dialog.setContentView(R.layout.validate_code)
         code_edit = dialog.findViewById(R.id.code_et)
 
@@ -65,9 +66,10 @@ class ForgotPasswordFragment : Fragment() {
         dialog.validate_btn.setOnClickListener {
             if (!code_edit.text.isEmpty()) {
                 val body: JsonObject = JsonObject()
-
+                dialog.dismiss()
                 body.addProperty("Mail", forgot_email_et.text.toString())
-                body.addProperty("Code",code_edit.text.toString() )
+                body.addProperty("email", forgot_email_et.text.toString())
+                body.addProperty("code",code_edit.text.toString() )
                 ccode = code_edit.text.toString()
                 (activity as MainActivity).showProgress(true)
 
@@ -95,7 +97,7 @@ class ForgotPasswordFragment : Fragment() {
                 // callApi
                 val body: JsonObject = JsonObject()
 
-                body.addProperty("Mail", LocalData.getUser(requireActivity()).mail)
+                body.addProperty("email", forgot_email_et.text.toString())
 
 
                 (activity as MainActivity).showProgress(true)
@@ -114,7 +116,7 @@ class ForgotPasswordFragment : Fragment() {
         viewModel.result.observe(requireActivity(), Observer { res ->
             (activity as MainActivity).showProgress(false)
 
-            dialog.show()
+          //  dialog.show()
             val window: Window = dialog.getWindow()!!
             window.setLayout(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -124,7 +126,7 @@ class ForgotPasswordFragment : Fragment() {
 
 
             when (res.errorCode) {
-                0 -> {
+                200 -> {
                     dialog.show()
                 }
                 1 -> Toast.makeText(requireActivity(), "User not exist", Toast.LENGTH_LONG).show()
@@ -132,6 +134,7 @@ class ForgotPasswordFragment : Fragment() {
                     .show()
                 4 -> Toast.makeText(requireActivity(), "Technical error", Toast.LENGTH_LONG).show()
                 555 -> Toast.makeText(requireActivity(), "request timeout", Toast.LENGTH_LONG).show()
+                else->Toast.makeText(requireActivity(), "server error", Toast.LENGTH_LONG).show()
 
             }
         })
@@ -141,8 +144,8 @@ class ForgotPasswordFragment : Fragment() {
             (activity as MainActivity).showProgress(false)
             if (dialog.isShowing)
                 dialog.dismiss()
-            if (it.errorCode == 555)
-                Toast.makeText(requireActivity(), "request timeout", Toast.LENGTH_LONG).show()
+            if (it.errorCode != 200)
+                Toast.makeText(requireActivity(), "invalid code", Toast.LENGTH_LONG).show()
             else {
                 val action =
                     ForgotPasswordFragmentDirections.actionForgotPasswordFragmentToResetPasswordFragment(

@@ -4,9 +4,9 @@ package inutrical.com.inutrical.calculate
 import com.google.gson.annotations.SerializedName
 
 data class BmiModel(
-    @SerializedName("Data")
+    @SerializedName("data")
     var `data`: Data = Data(),
-    @SerializedName("ErrorCode")
+    @SerializedName("status_code")
     var errorCode: Int = 0
 ) {
     data class Data(

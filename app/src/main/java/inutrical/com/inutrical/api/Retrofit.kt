@@ -18,11 +18,14 @@ object Retrofit {
         override fun verify(hostname: String?, session: SSLSession?): Boolean {
             return true
         }
-    }).addInterceptor(logging).connectTimeout(30,TimeUnit.SECONDS).build()
+    }).addInterceptor { chain ->
+        val request = chain.request().newBuilder().addHeader("Authorization", "Bearer ${LocalData.token}").build()
+        chain.proceed(request)
+    }.addInterceptor(logging).connectTimeout(60,TimeUnit.SECONDS).readTimeout(60,TimeUnit.SECONDS).writeTimeout(60,TimeUnit.SECONDS).build()
 
 
     private val retrofit = Retrofit.Builder()
-        .baseUrl("https://www.inutrical.com/api/")
+        .baseUrl("http://inutrical.badee.com.sa/api/")
         .addConverterFactory(GsonConverterFactory.create())
         .client(client)
         .build()

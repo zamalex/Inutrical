@@ -1,29 +1,48 @@
 package inutrical.com.inutrical.search
 
+import android.Manifest
+import android.app.Activity
 import android.app.Dialog
+import android.content.ActivityNotFoundException
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.view.Window
+import android.os.Environment
+import android.print.PdfConverter
+import android.view.*
+import android.view.inputmethod.InputMethodManager
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.Toast
+import androidx.core.content.FileProvider
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.gson.JsonObject
+import com.karumi.dexter.Dexter
+import com.karumi.dexter.MultiplePermissionsReport
+import com.karumi.dexter.PermissionToken
+import com.karumi.dexter.listener.PermissionRequest
+import com.karumi.dexter.listener.multi.MultiplePermissionsListener
+import com.webviewtopdf.PdfView
+import inutrical.com.inutrical.BuildConfig
 import inutrical.com.inutrical.R
 import inutrical.com.inutrical.RequestDietPlan
+import inutrical.com.inutrical.WebViewActivity
 import inutrical.com.inutrical.api.LocalData
 import inutrical.com.inutrical.main.MainActivity
 import kotlinx.android.synthetic.main.fragment_search.view.*
 import kotlinx.android.synthetic.main.search_dialog.*
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.collections.ArrayList
 
 
 /**
@@ -33,99 +52,147 @@ class SearchFragment : Fragment(), HistoryClickListener {
 
     lateinit var viewModel: SearchViewModel
     lateinit var dialog: Dialog
-    lateinit var v: View
+     var v: View? =null
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        if (v==null) {
 
-        v = inflater.inflate(R.layout.fragment_search, container, false)
-
-        dialog = Dialog(requireActivity())
-        dialog.setContentView(R.layout.search_dialog)
-        dialog.setCancelable(false)
-
-
-        viewModel =
-            ViewModelProvider.AndroidViewModelFactory.getInstance(requireActivity().application)
-                .create(SearchViewModel::class.java)
+            v = inflater.inflate(R.layout.fragment_search, container, false)
 
 
 
-
-        dialog.x_doalog.setOnClickListener {
-            if (dialog != null && dialog.isShowing)
-                dialog.dismiss()
-        }
-        v.search_btn.setOnClickListener {
-            var jsonObject = JsonObject()
-
-            jsonObject.addProperty("UserName", LocalData.getUser(requireActivity()).name)
-            jsonObject.addProperty("Password", LocalData.getUser(requireActivity()).pass)
-            jsonObject.addProperty("PatientNumber",v.p_num_et.text.toString() )
-            jsonObject.addProperty("PatientName", v.p_name_et.text.toString())
-
-            (activity as MainActivity).showProgress(true)
-            viewModel.search(jsonObject)
-
-        }
+            dialog = Dialog(requireActivity())
+            dialog.setContentView(R.layout.search_dialog)
+            dialog.setCancelable(false)
 
 
-
-        viewModel.result.observe(requireActivity(), Observer {
-            (activity as MainActivity).showProgress(false)
-
-            if (it != null) {
-                if (it != null && it.errorCode == 0&&it.data!=null) {
-                    v.p_num_txt.text = "Patient Number: ${it.data.number}"
-                    v.p_name_txt.text = "Patient Name: ${it.data.name}"
-                    v.gender_txt.text = "Gender: ${it.data.gender}"
-                    v.birth_txt.text = "Age: ${it.data.dateOfBirth}"
-                    v.weight_txt.text = "Weight (KG): ${it.data.weight}"
-                    v.height_txt.text = "Height (CM): ${it.data.height}"
-
-                    val s = it.data.dateOfBirth
-                    val inFormat =
-                        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")
-                    val dtIn = inFormat.parse(s)
+            viewModel =
+                ViewModelProvider.AndroidViewModelFactory.getInstance(requireActivity().application)
+                    .create(SearchViewModel::class.java)
 
 
 
 
-                    val date = inFormat.parse(it.data.dateOfBirth)
-                    val calendar = Calendar.getInstance(TimeZone.getDefault())
-                    calendar.time = date
+            dialog.x_doalog.setOnClickListener {
+                if (dialog != null && dialog.isShowing)
+                    dialog.dismiss()
+            }
+            v!!.search_btn.setOnClickListener {
+                var jsonObject = JsonObject()
+                val imm: InputMethodManager? =
+                    requireActivity().getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
+//Hide:
+//Hide:
+                if (imm != null) {
+                    imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0)
+                }
 
-//                    v.birth_txt.text = "Age: ${(Calendar.getInstance().get(Calendar.YEAR)-calendar[Calendar.YEAR]).toString()}"
 
+                jsonObject.addProperty("UserName", LocalData.getUser(requireActivity()).name)
+                jsonObject.addProperty("Password", LocalData.getUser(requireActivity()).pass)
+                jsonObject.addProperty("PatientNumber", v!!.p_num_et.text.toString())
+                jsonObject.addProperty("PatientName", v!!.p_name_et.text.toString())
 
-                    var jsonObject = JsonObject()
+                (activity as MainActivity).showProgress(true)
+                viewModel.search(jsonObject)
 
-                    jsonObject.addProperty("UserName", LocalData.getUser(requireActivity()).name)
-                    jsonObject.addProperty("Password", LocalData.getUser(requireActivity()).pass)
-                    jsonObject.addProperty("PatientId", it.data.id)
-                    jsonObject.addProperty("Index", "0")
-                    jsonObject.addProperty("Size", "10")
-                    viewModel.getHistory(jsonObject)
-                } else if (it != null && it.errorCode == 555)
-                    Toast.makeText(requireActivity(), "request timeout", Toast.LENGTH_LONG).show()
             }
 
 
-        })
+
+            viewModel.result.observe(requireActivity(), Observer {
+                (activity as MainActivity).showProgress(false)
+
+                if (it != null) {
+                    if (it != null && it.statusCode == 200 && it.data != null && it.data.isNotEmpty()) {
+                        v!!.p_num_txt.text = "Patient Number: ${it.data[0]?.patientNumber}"
+                        v!!.p_name_txt.text = "Patient Name: ${it.data[0]?.patientName}"
+                        v!!.gender_txt.text = "Gender: ${it.data[0]?.gender}"
+                        v!!.birth_txt.text = "Age: ${it.data[0]?.birthdate}"
+                        v!!.weight_txt.text = "Weight (KG): ${it.data[0]?.patientWeight}"
+                        v!!.height_txt.text = "Height (CM): ${it.data[0]?.patientHeight}"
+
+                        val s = it.data[0]?.birthdate
+                        val inFormat =
+                            SimpleDateFormat("yyyy-MM-dd")
+                        val dtIn = inFormat.parse(s)
+
+                        v!!.update_diet_plan.visibility = View.VISIBLE
+
+                        v!!.update_diet_plan.setOnClickListener { i ->
+                            val bundle = bundleOf(
+                                "weight" to it.data[0]?.patientWeight,
+                                "height" to it.data[0]?.patientHeight,
+                                "id" to it.data[0]?.patientNumber
+                            )
+                            v!!.findNavController()
+                                .navigate(R.id.action_searchFragment_to_calculateFragment, bundle)
+
+                        }
+
+                        val date = inFormat.parse(it.data[0]?.birthdate)
+                        val calendar = Calendar.getInstance(TimeZone.getDefault())
+                        calendar.time = date
+
+                        v!!.birth_txt.text = "Age: ${
+                            (Calendar.getInstance()
+                                .get(Calendar.YEAR) - calendar[Calendar.YEAR]).toString()
+                        }"
 
 
-        viewModel.history.observe(requireActivity(), Observer {
-            (activity as MainActivity).showProgress(false)
-            if (it != null) {
-                if (it.errorCode == 0 && it != null) {
-                    v.search_rv.apply {
-                        layoutManager = LinearLayoutManager(requireActivity())
-                        adapter = SearchAdapter(requireActivity(), it.data, this@SearchFragment)
+                        var jsonObject = JsonObject()
+
+                        jsonObject.addProperty("PatientId", it.data[0]?.patientNumber)
+                        jsonObject.addProperty("Index", "0")
+                        jsonObject.addProperty("Size", "10")
+                        viewModel.getHistory(jsonObject)
+                    } else if (it != null && it.statusCode == 555) {
+                        v!!.p_num_txt.text = "Patient Number:"
+                        v!!.p_name_txt.text = "Patient Name:"
+                        v!!.gender_txt.text = "Gender:"
+                        v!!.birth_txt.text = "Age:"
+                        v!!.weight_txt.text = "Weight (KG):"
+                        v!!.height_txt.text = "Height (CM):"
+                        v!!.search_rv.apply {
+                            layoutManager = LinearLayoutManager(requireActivity())
+                            adapter =
+                                SearchAdapter(requireActivity(), ArrayList(), this@SearchFragment)
+                        }
+                        Toast.makeText(requireActivity(), "request timeout", Toast.LENGTH_LONG)
+                            .show()
+                    } else {
+                        v!!.p_num_txt.text = "Patient Number:"
+                        v!!.p_name_txt.text = "Patient Name:"
+                        v!!.gender_txt.text = "Gender:"
+                        v!!.birth_txt.text = "Age:"
+                        v!!.weight_txt.text = "Weight (KG):"
+                        v!!.height_txt.text = "Height (CM):"
+                        v!!.search_rv.apply {
+                            layoutManager = LinearLayoutManager(requireActivity())
+                            adapter =
+                                SearchAdapter(requireActivity(), ArrayList(), this@SearchFragment)
+                        }
+                        Toast.makeText(requireActivity(), "not found", Toast.LENGTH_LONG).show()
                     }
+                }
 
 
-                    /* try {
+            })
+
+
+            viewModel.history.observe(requireActivity(), Observer {
+                (activity as MainActivity).showProgress(false)
+                if (it != null) {
+                    if (it.errorCode == 200 && it != null) {
+                        v!!.search_rv.apply {
+                            layoutManager = LinearLayoutManager(requireActivity())
+                            adapter = SearchAdapter(requireActivity(), it.data, this@SearchFragment)
+                        }
+
+
+                        /* try {
                          val dwldsPath =
                              File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + "/hhhh" + ".pdf")
                          val pdfAsBytes: ByteArray = Base64.decode(it.data[1].medicalHistory.uRL.replace("data:application/pdf;base64,","").trim(), 0)
@@ -139,7 +206,7 @@ class SearchFragment : Fragment(), HistoryClickListener {
                          e.printStackTrace()
                      }
        */
-                    /*
+                        /*
                     *   val share = Intent()
                          share.action = Intent.ACTION_SEND
                          share.type = "application/pdf"
@@ -151,33 +218,95 @@ class SearchFragment : Fragment(), HistoryClickListener {
                          startActivity(Intent.createChooser(share, "Share"))
                     * */
 
-                } else if (it != null && it.errorCode == 555)
-                    Toast.makeText(requireActivity(), "request timeout", Toast.LENGTH_LONG).show()
-            }
+                    } else if (it != null && it.errorCode == 555)
+                        Toast.makeText(requireActivity(), "request timeout", Toast.LENGTH_LONG)
+                            .show()
+                }
 
-        })
+            })
 
-        viewModel.pdfresponse.observe(requireActivity(), Observer {
-            (activity as MainActivity).showProgress(false)
+            viewModel.htmlReponse.observe(viewLifecycleOwner, Observer {
+                (activity as MainActivity).showProgress(false)
 
-            if (it != null) {
-                if (it)
-                    Toast.makeText(
-                        requireActivity(),
-                        "pdf downloaded successfully",
-                        Toast.LENGTH_LONG
-                    )
+                if (it != null) {
+
+                    Dexter.withContext(activity)
+                        .withPermissions(
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                            Manifest.permission.READ_EXTERNAL_STORAGE
+                        )
+                        .withListener(object : MultiplePermissionsListener {
+                            override fun onPermissionsChecked(report: MultiplePermissionsReport) {
+                                // check if all permissions are granted
+                                if (report.areAllPermissionsGranted()) {
+                                    val converter = PdfConverter.getInstance()
+                                    val file =
+                                        File(
+                                            Environment.getExternalStoragePublicDirectory(
+                                                Environment.DIRECTORY_DOWNLOADS
+                                            ).toString(), "diet_plan.pdf"
+                                        )
+                                    var htmlString: String = "${it.string().replace("\\r\\n", " ")}"
+
+
+                                    startActivity(
+                                        Intent(
+                                            requireActivity(),
+                                            WebViewActivity::class.java
+                                        ).apply {
+                                            putExtra("html", htmlString)
+                                        })
+
+
+                                }
+
+                                // check for permanent denial of any permission
+                                if (report.isAnyPermissionPermanentlyDenied()) {
+                                    // Toast.makeText(getActivity(), "قم بالسماح للتطبيق للوصول الى موقعك من خلال الاعدادات", Toast.LENGTH_LONG).show();
+                                }
+                            }
+
+                            override fun onPermissionRationaleShouldBeShown(
+                                permissions: List<PermissionRequest?>?,
+                                token: PermissionToken
+                            ) {
+                                token.continuePermissionRequest()
+                            }
+                        })
+                        .onSameThread()
+                        .check()
+
+                } else
+                    Toast.makeText(requireActivity(), "failed to generate pdf", Toast.LENGTH_LONG)
                         .show()
-                else
+            })
+            viewModel.pdfresponse.observe(requireActivity(), Observer {
+                (activity as MainActivity).showProgress(false)
+
+                if (it != null) {
+                    if (it)
+                        Toast.makeText(
+                            requireActivity(),
+                            "pdf downloaded successfully",
+                            Toast.LENGTH_LONG
+                        )
+                            .show()
+                    else
+                        Toast.makeText(
+                            requireActivity(),
+                            "failed to generate pdf",
+                            Toast.LENGTH_LONG
+                        )
+                            .show()
+
+
+                } else
                     Toast.makeText(requireActivity(), "failed to generate pdf", Toast.LENGTH_LONG)
                         .show()
 
+            })
 
-            } else
-                Toast.makeText(requireActivity(), "failed to generate pdf", Toast.LENGTH_LONG)
-                    .show()
-
-        })
+        }
         // Inflate the layout for this fragment
         return v
     }
@@ -190,6 +319,8 @@ class SearchFragment : Fragment(), HistoryClickListener {
 
     override fun onItemClick(obj: HistoryModel.Data) {
         showDoalog()
+
+
 
         dialog.dietation.text = obj.clinicalDietation
         dialog.phy_name.text = obj.physicianName
@@ -217,8 +348,8 @@ class SearchFragment : Fragment(), HistoryClickListener {
                 if (requireActivity().checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
                     if (obj.medicalHistory != null)
 
-                        if (!obj.medicalHistory.uRL.isEmpty()) {
-                            decodePdf("medicalhistory", obj.medicalHistory.uRL)
+                        if (!obj.medicalHistory.isEmpty()) {
+                            decodePdf("medicalhistory", obj.medicalHistory)
                         }
                 } else
                     requireActivity().requestPermissions(
@@ -230,8 +361,8 @@ class SearchFragment : Fragment(), HistoryClickListener {
             } else {
                 if (obj.medicalHistory != null)
 
-                    if (!obj.medicalHistory.uRL.isEmpty()) {
-                        decodePdf("medicalhistory", obj.medicalHistory.uRL)
+                    if (!obj.medicalHistory.isEmpty()) {
+                        decodePdf("medicalhistory", obj.medicalHistory)
                     }
             }
         }
@@ -240,8 +371,8 @@ class SearchFragment : Fragment(), HistoryClickListener {
             if (Build.VERSION.SDK_INT >= 23) {
                 if (requireActivity().checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
                     if (obj.labResults != null)
-                        if (!obj.labResults.uRL.isEmpty()) {
-                            decodePdf("labresult", obj.labResults.uRL)
+                        if (!obj.labResults.isEmpty()) {
+                            decodePdf("labresult", obj.labResults)
                         }
                 } else
                     requireActivity().requestPermissions(
@@ -253,16 +384,20 @@ class SearchFragment : Fragment(), HistoryClickListener {
             } else {
                 if (obj.labResults != null)
 
-                    if (!obj.labResults.uRL.isEmpty()) {
-                        decodePdf("labresult", obj.labResults.uRL)
+                    if (!obj.labResults.isEmpty()) {
+                        decodePdf("labresult", obj.labResults)
                     }
             }
         }
         dialog.diet_plan.setOnClickListener {
 
             (activity as MainActivity).showProgress(true)
-            viewModel.exportPdf(RequestDietPlan(obj.Id, LocalData.getUser(requireActivity()).pass!!,LocalData.getUser(requireActivity()).name!!))
+            viewModel.exportPdf(RequestDietPlan(obj.id, LocalData.getUser(requireActivity()).pass!!,LocalData.getUser(requireActivity()).name!!))
         }
+
+    }
+
+    fun generateFromHtml(html:String){
 
     }
 
